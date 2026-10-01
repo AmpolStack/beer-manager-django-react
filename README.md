@@ -1,5 +1,7 @@
 # Beer Manager
 
+[![Backend tests](https://github.com/AmpolStack/beer-manager-django-react/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/AmpolStack/beer-manager-django-react/actions/workflows/backend-tests.yml)
+
 Aplicación CRUD para administrar marcas de cerveza y sus cervezas asociadas. Proyecto de
 referencia que integra Django REST Framework, React y MariaDB, orquestados con Docker
 Compose.
@@ -20,10 +22,11 @@ convenciones de cada tecnología.
 8. [Infraestructura: Docker](#infraestructura-docker)
 9. [Ciclo de vida de una petición](#ciclo-de-vida-de-una-petición)
 10. [Puesta en marcha](#puesta-en-marcha)
-11. [Tareas comunes](#tareas-comunes)
-12. [Solución de problemas](#solución-de-problemas)
-13. [Notas de producción](#notas-de-producción)
-14. [Recursos](#recursos)
+11. [Tests](#tests)
+12. [Tareas comunes](#tareas-comunes)
+13. [Solución de problemas](#solución-de-problemas)
+14. [Notas de producción](#notas-de-producción)
+15. [Recursos](#recursos)
 
 ---
 
@@ -666,6 +669,44 @@ docker compose down -v   # elimina contenedores y volumen de datos
 
 ---
 
+## Tests
+
+La suite usa el framework de pruebas nativo de Django (`django.test`) y cubre modelos,
+serializers y la API. Corre contra una base SQLite en memoria definida en
+`beer_project/settings_test.py`, así que es rápida y no necesita el servicio de MariaDB.
+
+```bash
+# Ejecutar la suite
+docker compose exec backend python manage.py test --settings=beer_project.settings_test
+
+# Con detalle de cada prueba
+docker compose exec backend python manage.py test --settings=beer_project.settings_test -v 2
+
+# Solo una clase
+docker compose exec backend python manage.py test beers.tests.BeerAPITests
+```
+
+| Clase | Qué verifica |
+|-------|--------------|
+| `BrandModelTests` | Nombre único, `__str__`, borrado en cascada |
+| `BeerModelTests` | Valores por defecto, `__str__`, `related_name` |
+| `BrandAPITests` | Listado paginado, alta, validación, búsqueda, acción `beers`, borrado |
+| `BeerAPITests` | CRUD, filtros, búsqueda, ordenamiento, acción `types` |
+| `BeerSerializerTests` | Validación de `alcohol_content` e `ibu` |
+
+### Integración continua
+
+El workflow `.github/workflows/backend-tests.yml` ejecuta la suite en cada push a `main` y
+en cada pull request. Antes de los tests corre dos verificaciones:
+
+- `python manage.py check` — valida la configuración del proyecto.
+- `python manage.py makemigrations --check --dry-run` — falla si hay cambios en los modelos
+  sin una migración generada.
+
+El badge al inicio del documento refleja el estado de la última ejecución.
+
+---
+
 ## Tareas comunes
 
 ### Cambiar un campo del modelo
@@ -764,8 +805,9 @@ se necesita JWT o sesiones (`djangorestframework-simplejwt`), permisos
   escritura.
 - **El ORM como capa de acceso a datos.** No hay repositorios. Para lógica reutilizable se
   puede extraer un módulo `beers/services.py`.
-- **Sin pruebas automatizadas.** La estructura natural sería `beers/tests.py` con el
-  `TestCase` de Django o `pytest-django`.
+- **Pruebas sobre SQLite.** La suite cubre modelos, serializers y endpoints, pero no
+  ejercita la base de datos real de producción. Para cubrir diferencias de motor conviene
+  añadir una ejecución contra MariaDB.
 - **CORS y proxy como patrón de desarrollo.** En producción el reverse proxy sirve la API
   en el mismo origen y CORS deja de ser necesario.
 
