@@ -10,7 +10,7 @@ function App() {
     <div>
       <header className="header">
         <div className="header-content">
-          <h1>🍺 Beer Manager</h1>
+          <h1>Beer Manager</h1>
           <nav className="nav-tabs">
             <button
               className={`nav-tab ${tab === 'beers' ? 'active' : ''}`}
