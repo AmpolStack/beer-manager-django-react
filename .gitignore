@@ -1,0 +1,28 @@
+# Python / Django
+__pycache__/
+*.py[cod]
+*.sqlite3
+db.sqlite3
+staticfiles/
+.env
+*.log
+
+# Node / React
+node_modules/
+/frontend/build/
+npm-debug.log*
+yarn-error.log*
+
+# Entorno
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Docker
+.dockerignore
