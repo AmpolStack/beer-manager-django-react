@@ -25,6 +25,7 @@ services:
     container_name: beer_backend
     environment:
       DEBUG: "True"
+      ALLOWED_HOSTS: "localhost,127.0.0.1,0.0.0.0,backend"
       DB_HOST: db
       DB_PORT: 3306
       DB_NAME: beer_db
