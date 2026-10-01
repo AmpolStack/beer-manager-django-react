@@ -625,13 +625,15 @@ services:
     environment:                   # ← credenciales por variable de entorno
       MYSQL_DATABASE: beer_db
     healthcheck:                   # ← ¿ya está lista para aceptar conexiones?
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       retries: 5
+      start_period: 30s            # ← margen para el primer arranque
 
   backend:
     build: ./backend
     environment:                   # ← estas variables las lee settings.py
       DB_HOST: db                  # ← "db" es el NOMBRE del servicio
+      ALLOWED_HOSTS: "localhost,127.0.0.1,0.0.0.0,backend"  # ← ¡importante!
     depends_on:
       db:
         condition: service_healthy  # ← espera al healthcheck, no solo al arranque
@@ -666,6 +668,18 @@ Cinco ideas que debes retener:
 5. **`0.0.0.0:8000`** en vez de `localhost:8000` al arrancar un servidor en un
    contenedor. `localhost` solo acepta conexiones de dentro del contenedor; para que
    llegue desde fuera tiene que escuchar en todas las interfaces.
+
+6. **`ALLOWED_HOSTS` debe incluir el nombre del servicio backend.** Cuando el dev server
+   de React proxea `/api/...`, la petición llega a Django con `Host: backend:8000`. Si
+   `backend` no está en `ALLOWED_HOSTS`, Django responde **400 DisallowedHost** (y lo
+   ves como un 400 en el navegador). Por eso `docker-compose.yml` define
+   `ALLOWED_HOSTS: "...,backend"`.
+
+7. **El healthcheck oficial de MariaDB es `healthcheck.sh`**, no `mysqladmin ping`. La
+   imagen `mariadb:11` ya **no incluye** `mysqladmin` (el binario se llama
+   `mariadb-admin`), y además un `ping` anónimo da `Access denied`. El script
+   `healthcheck.sh --connect --innodb_initialized` es el método soportado y comprueba
+   que InnoDB terminó de inicializar de verdad.
 
 ---
 
@@ -846,7 +860,7 @@ docker compose exec backend python manage.py shell             # REPL interactiv
 docker compose exec backend python manage.py check             # validar config
 docker compose exec backend python manage.py showmigrations    # ver estado
 
-# --- Django: experimenting sin API ---
+# --- Django: experimentar sin API ---
 docker compose exec backend python manage.py shell
 >>> from beers.models import Beer, Brand
 >>> Beer.objects.all()
@@ -934,14 +948,19 @@ Queda disponible en `GET /api/beers/{id}/similares/`. **Sin tocar `urls.py`.**
 | Pantalla vacía en React | Error en la consola del navegador | Mira la pestaña Console; revisa que el backend responda en `:8000/api/` |
 | Cambié CORS y no funciona | `ALLOWED_HOSTS` también importa | Ambos deben incluir `localhost` |
 | La página recarga infinitamente | Falta un `useCallback` o un array de deps mal puesto | Revisa los deps del `useEffect` |
-| Peticion se duplica | Falta cleanup en el `useEffect` | Devuelve el `return () => clearTimeout(...)` |
+| Petición se duplica | Falta cleanup en el `useEffect` | Devuelve el `return () => clearTimeout(...)` |
 | `no such table: auth_user` | No corriste las migraciones | `docker compose exec backend python manage.py migrate` |
+| **400** al llamar `/api/` desde el navegador | Django rechaza el `Host: backend:8000` del proxy | Agrega `backend` a `ALLOWED_HOSTS` (ver §5.2, punto 6) |
+| **500** en `/api/beers/` con `no such table: beers_beer` | La app `beers` no tiene migraciones | `docker compose exec backend python manage.py makemigrations beers && ... migrate` |
+| DB queda `unhealthy` y el backend no arranca | Healthcheck con `mysqladmin` (no existe en MariaDB 11) | Usa `["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]` |
+| `Proxy error ... EAI_AGAIN` al iniciar | El frontend arrancó antes que el backend | Es inocuo (HMR); `depends_on: backend` lo reduce. Recarga la página |
+| `Cannot GET /api/...` en un cliente sin `Accept: application/json` | El dev server de CRA no proxea peticiones "de navegación" (HTML) | Normal: axios (el navegador) sí las proxea. Prueba con `curl -H "Accept: application/json"` |
 
 ---
 
 ## 11. Del prototipo a producción
 
-Lo que hay aquí es **un prototipo educational**. Para producción, esto es lo que cambia:
+Lo que hay aquí es **un prototipo educativo**. Para producción, esto es lo que cambia:
 
 ### Lo que hay que cambiar sí o sí
 
