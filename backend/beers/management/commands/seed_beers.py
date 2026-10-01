@@ -39,7 +39,7 @@ BEERS = [
     {'brand': 'Heineken', 'name': 'Heineken Original', 'beer_type': 'lager', 'alcohol_content': '5.00', 'ibu': 20, 'description': 'Lager premium con sabor equilibrado y final limpio.'},
     {'brand': 'Heineken', 'name': 'Heineken Silver', 'beer_type': 'lager', 'alcohol_content': '4.00', 'ibu': 18, 'description': 'Version mas ligera y moderna, menor cuerpo.'},
     {'brand': 'Guinness', 'name': 'Guinness Draught', 'beer_type': 'stout', 'alcohol_content': '4.20', 'ibu': 45, 'description': 'Stout cremoso con notas de cafe y chocolate.'},
-    {'brand': 'Guinness', 'name': 'Guinness Extra Stout', 'beer_type': 'stout', 'alcohol_content': '5.60', 'ibu': 55, 'description': 'Version mas intense y potente de la receta original.'},
+    {'brand': 'Guinness', 'name': 'Guinness Extra Stout', 'beer_type': 'stout', 'alcohol_content': '5.60', 'ibu': 55, 'description': 'Version mas intensa y potente de la receta original.'},
     {'brand': 'Corona', 'name': 'Corona Extra', 'beer_type': 'lager', 'alcohol_content': '4.60', 'ibu': 22, 'description': 'Pilsner mexicana con toque de lima y sal.'},
     {'brand': 'Corona', 'name': 'Corona Premier', 'beer_type': 'lager', 'alcohol_content': '4.30', 'ibu': 21, 'description': 'Edicion premium con mayor cuerpo.'},
     {'brand': 'Modelo', 'name': 'Modelo Especial', 'beer_type': 'lager', 'alcohol_content': '4.40', 'ibu': 18, 'description': 'Pilsner mexicana iconica y perfecta para acompanar la comida.'},
